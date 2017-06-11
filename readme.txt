@@ -1,8 +1,10 @@
-Erweiterte Umfrage 1.4 für IlchClan 1.1 (A-F):
+Erweiterte Umfrage 1.5 für IlchClan 1.1 J oder höher:
 """""""""""""""""""""""
 Beschreibung:
 -------------
-Man kann bei Umfragen angeben, welche Usergruppen und Teams/Gruppen an der Umfrage teilnehmen können, ab welchem Recht das Ergebnis sichtbar ist und dass die Umfrage zu einem bestimmten Zeitpunkt ausläuft. Außerdem ist es möglich mehrere Antworten zu zulassen.
+Man kann bei Umfragen angeben, welche Usergruppen und Teams/Gruppen an der Umfrage teilnehmen können,
+ab welchem Recht das Ergebnis sichtbar ist und dass die Umfrage zu einem bestimmten Zeitpunkt ausläuft oder maximale Anzahl an Abstimmungen.
+Außerdem ist es möglich mehrere Antworten zu zulassen.
 
 Box: Hier wird eine Umfrage angezeigt, bei der man abstimmen kann oder eine zufällige von der man das Ergebnis sehen kann.
 Content: Bei Umfragen, die nicht für die eigene Usergruppe/Teams/Gruppen sind und deren Ergebnis man sehen darf, wird das Ergebnis angezeigt.
@@ -10,6 +12,10 @@ Adminmenü: Erweitert um die Auswahl für welche Usergruppen/Teams/Gruppen ein Vot
 
 Changelog:
 ----------
+°Version 1.5:
+	- Fehler beim Editieren von Umfragen bei denen man Antworten hinzufügt behoben
+	- Option für maximale Abstimmanzahl hinzugefügt
+
 °Version 1.4:
 	- Mehrere Antwortmöglichkeiten 
 
@@ -49,7 +55,7 @@ Installation:
 	| include/contents/vote.php 
 	| include/admin/vote.php
 
-° install.php ausführen, indem man es im Webbrowser aufruft ( z.B. http://meine.seite.de/install.php ) und danach wieder löschen
+° install.php ausführen (auch bei Updates), indem man es im Webbrowser aufruft ( z.B. http://meine.seite.de/install.php ) und danach wieder löschen
 
 Bekannte Einschränkungen / Fehler:
 ----------------------------------
