@@ -1,6 +1,7 @@
 <?php 
 #   Copyright by: Manuel Staechele
 #   Support: www.ilch.de
+#   Modified by Mairu -> Erweiterte Umfrage 1.2
 #   include/contents/vote.php
 
 
@@ -62,13 +63,14 @@ if ($_SESSION['authright'] <= -1 ) {
 } else {
 	  $woR = '= "1"';
 }
-$limit = 3;  // Limit 
+$limit = 3;  // Limit
+$zaehler = 0;
 $page = ( $menu->getA(1) == 'p' ? $menu->getE(1) : 1 );
-$MPL = db_make_sites ($page , 'WHERE recht '.$woR , $limit , "?vote" , 'poll' );
+$MPL = db_make_sites ($page , '' , $limit , "?vote" , 'poll' );
 $anfang = ($page - 1) * $limit;
 $class = '';
-$erg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' ORDER BY poll_id DESC LIMIT '.$anfang.','.$limit);
-while ($fraRow = db_fetch_object($erg)) {
+$erg = db_query('SELECT * FROM `prefix_poll` ORDER BY stat DESC, poll_id DESC LIMIT '.$anfang.',10000000');
+while ($zaehler < $limit AND $fraRow = db_fetch_object($erg)) {
 
 	$maxRow = db_fetch_object(db_query('SELECT MAX(res) as res FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'"'));
 	$gesRow = db_fetch_object(db_query('SELECT SUM(res) as res FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'"'));
@@ -84,25 +86,32 @@ while ($fraRow = db_fetch_object($erg)) {
 		
     
     if ($fraRow->user_rechte == '') $fraRow->user_rechte = '0123456789';
-		if ($_SESSION['authright'] < 0) $posar = 1; else $posar = 0;
 		if (!empty($fraRow->groups)) {
       $votegroups = explode('#', $fraRow->groups);
-		  foreach ($_SESSION['authgrp'] as $id => $authgroup) if (in_array($id, $votegroups)) $abstimmen = TRUE;
-		  if (is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $abstimmen = FALSE;
+		  foreach ($_SESSION['authgrp'] as $id => $authgroup) if (in_array($id, $votegroups)) $abstimmen = true;
+		  if (strpos($fraRow->user_rechte,''.abs($_SESSION['authright'])) === false) $abstimmen = false;
     }
-    elseif (!is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $abstimmen = TRUE;
-    else $abstimmen = FALSE;
+    elseif (strpos($fraRow->user_rechte,''.abs($_SESSION['authright'])) !== false) $abstimmen = true;
+    else $abstimmen = false;
     
-    echo '<tr><td class="Cdark"><b>'.$fraRow->frage.'</b></td></tr>';
+    if (( in_array ( $inTextAr , $textAr ) OR $fraRow->stat == 0) OR (!$abstimmen)) {
+			$imPollArrayDrin = true;
+		} elseif ($abstimmen) {
+			$imPollArrayDrin = false;
+		}
+    
+    if (!$imPollArrayDrin OR $fraRow->view >= $_SESSION['authright']) {
+    $zaehler++; 
+    echo '<tr><td class="Cdark"><b>'.$fraRow->frage.'</b>'.($fraRow->stat==0?' (geschlossen)':'').'</td></tr>';
 		if ( $class == 'Cnorm' ) { $class = 'Cmite'; } else { $class = 'Cnorm'; }
 		echo '<tr><td class="'.$class.'">';
-		if (( in_array ( $inTextAr , $textAr ) OR $fraRow->stat == 0) OR (!$abstimmen)) {
+
+		if ($imPollArrayDrin) {
 			  echo '<table width="100%" cellpadding="0">';
-		    $imPollArrayDrin = true;
-		} elseif ($abstimmen) {
+		} else {
 			  echo '<form action="index.php?vote-W'.$fraRow->poll_id.'" method="POST">';
-		    $imPollArrayDrin = false;
 		}
+
     $i = 0;
 		$pollErg = db_query('SELECT antw, res, sort FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'" ORDER BY sort');
 		while ( $pollRow = db_fetch_object($pollErg) ) {
@@ -141,7 +150,7 @@ while ($fraRow = db_fetch_object($erg)) {
 		}
 		
     echo '</td></tr>';
-		
+    }
 }// end while
 
 echo '<tr><td class="Cdark" align="center">'. $MPL .'</td></tr></table>';

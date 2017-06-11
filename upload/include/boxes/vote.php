@@ -1,6 +1,8 @@
 <?php 
 #   Copyright by Manuel Staechele
 #   Support www.ilch.de
+#   Modified by Mairu -> Erweiterte Umfrage 1.2
+#   include/boxes/vote.php
 
 
 defined ('main') or die ( 'no direct access' );
@@ -14,45 +16,60 @@ $stunden = 24;
 	$breite = 50;
 	$diftime = time() - (60 * 60 * $stunden);
 		
-	if ( has_right(-1) ) {
-	  $woR = '>= "1"';
-	} else {
-	  $woR = '= "1"';
-	}
+	$voted = array();
 	
-	
-  $fraErg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' ORDER BY poll_id DESC');
+  $fraErg = db_query('SELECT * FROM `prefix_poll` WHERE stat = 1 ORDER BY poll_id DESC');
  	
   if ( db_num_rows($fraErg) > 0) {
-	$showpoll = FALSE;
-	$fraRow = TRUE;
-	$spollid = 0;
-  while (($showpoll == FALSE) AND ($fraRow == TRUE)) { 
-  $fraRow = db_fetch_object($fraErg);
-  
-  if ($fraRow->user_rechte == '') $fraRow->user_rechte = '0123456789';
-		if ($_SESSION['authright'] < 0) $posar = 1; else $posar = 0;
+	$pollid = 0;
+  while ($fraRow = db_fetch_object($fraErg)) { 
     
-    if (!empty($fraRow->groups)) {
-      $votegroups = explode('#', $fraRow->groups);
-		  foreach ($_SESSION['authgrp'] as $id => $authgroup) if (in_array($id, $votegroups)) $showpoll = TRUE;
-		  if (is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $showpoll = FALSE;
-		  $spollid = $fraRow->poll_id;
+    if ($fraRow->recht == 2) {
+		  $inTextAr = $_SESSION['authid'];
+		} elseif ($fraRow->recht == 1) {
+		  $inTextAr = $_SERVER['REMOTE_ADDR'];
+		}
+		
+		$textAr = explode('#',$fraRow->text);
+		if ( in_array ( $inTextAr , $textAr )) {
+			$imPollArrayDrin = true;
+		} else {
+			$imPollArrayDrin = false;
+		}
+    
+    if (!$imPollArrayDrin OR (count($tovote) == 0 AND $fraRow->view >= $_SESSION['authright']) OR $fraRow->view >= $_SESSION['authright']) {
+      if ($fraRow->recht == 2) { 
+        if ($fraRow->user_rechte == '') $fraRow->user_rechte = '0123456789';
+        if (!empty($fraRow->groups)) {
+          $votegroups = explode('#', $fraRow->groups);
+    		  foreach ($_SESSION['authgrp'] as $id => $authgroup) if (in_array($id, $votegroups)) $abstimmen = true;
+    		  if (strpos($fraRow->user_rechte,''.abs($_SESSION['authright'])) === false) $abstimmen = false;
+          }
+        elseif (strpos($fraRow->user_rechte,''.abs($_SESSION['authright'])) !== false) {
+          $abstimmen = true;
+        }
+      } else {
+        if (!$imPollArrayDrin) $abstimmen = true;
+        else $abstimmen = false;        
+      }
+      
+      if ($abstimmen AND !$imPollArrayDrin) {
+        $pollid = $fraRow->poll_id;
+        break;
+      } else {
+        $voted[] = $fraRow->poll_id;
+        }
+      }
     }
-    elseif (!is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) {
-    $spollid = $fraRow->poll_id;
-    $showpoll = TRUE;
-    }  
-  }}
+  }
   
-  
-  if ($spollid != 0) $fraErg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' AND poll_id = '.$spollid.' ORDER BY poll_id DESC LIMIT 1');
-  else $fraErg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' ORDER BY poll_id DESC LIMIT 1');
-  
-	if ( db_num_rows($fraErg) > 0) {
-	
+  if ($pollid == 0 AND count($voted) > 0) {
+    $pollid = $voted[array_rand($voted,1)];
+  }
+    
+  if ($pollid != 0) {
+	$fraErg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' AND poll_id = '.$pollid.' ORDER BY poll_id DESC LIMIT 1');
 	$fraRow = db_fetch_object($fraErg);
-	if ( $fraRow->stat == 1 ) { 
 		
 	$maxRow = db_fetch_object(db_query('SELECT MAX(res) as res FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'"'));
 	$gesErg = db_query('SELECT SUM(res) as res FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'"');
@@ -81,7 +98,7 @@ $stunden = 24;
     $pollErg = db_query('SELECT antw, res, sort FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'" ORDER BY sort');
 		while ( $pollRow = db_fetch_object($pollErg) ) {
 		    if ( $imPollArrayDrin ) {
-						echo '<tr><td>'.$pollRow->antw.'</td><td align="right">'.$pollRow->res.'</td></tr>';
+						echo '<tr><td>'.$pollRow->antw.'</td><td align="right">'.$pollRow->res.' ('.round($pollRow->res/$ges*100,1).'%)</td></tr>';
 		    } else {
 			      $i++;
             echo '<input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
@@ -92,9 +109,6 @@ $stunden = 24;
 		} else {
 		    echo '<p align="center"><input type="submit" value="'.$lang['formsub'].'"></p></form>';
 		}   
-		} else {
-		  echo $lang['nowvoteavailable'];
-		}
 		} else {
 		  echo $lang['nowvoteavailable'];
 		}

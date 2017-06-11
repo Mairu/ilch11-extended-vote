@@ -1,6 +1,8 @@
 <?php 
 #   Copyright by: Manuel Staechele
 #   Support: www.ilch.de
+#   Modified by Mairu -> Erweiterte Umfrage 1.2
+#   include/admin/vote.php
 
 
 defined ('main') or die ( 'no direct access' );
@@ -75,13 +77,15 @@ if ( $menu->get(1) == 5 ) {
       
       $grps = '';
       $usr = '';
-      if ($_POST['poll_recht'] >= 1) {
+      $view = 0;
+      if ($_POST['poll_recht'] > 1) {
       foreach($groups as $id => $group) if ($_POST['cb_gr'.$group['id']] == 'on') $grps .='#'.$group['id'];    
       for ($i = 1; $i <= 9; $i++ ) if ($_POST['cb'.$i] == 'on') $usr .= $i;
-			}
+			$view = escape($_POST['view'],'integer');
+      }
                
 	    if ( empty($_POST['vid']) ) {
-		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'") ' );
+		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'", '.$view.') ');
 			  $poll_id = db_last_id(); $i = 1;
 			  foreach ($_POST['antw'] as $v) {
 			    if ( ! empty ($v) ) {
@@ -90,7 +94,7 @@ if ( $menu->get(1) == 5 ) {
 				  }
 		    }
 		  } else {
-        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'" WHERE poll_id = "'.$_POST['vid'].'"');
+        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.' WHERE poll_id = "'.$_POST['vid'].'"');
 			  $i = 1;
 				foreach ($_POST['antw'] as $k => $v) {
 				  $a = db_count_query("SELECT COUNT(*) FROM prefix_poll_res WHERE poll_id = ".$_POST['vid']." AND sort = ".$k);
@@ -109,7 +113,7 @@ if ( $menu->get(1) == 5 ) {
 		if ( empty($_POST['add']) ) {
 		
 			if ( isset($_GET['vid']) ) {
-			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
+			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups, view FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
 				$_POST['frage'] = $row1->frage;
 				$_POST['poll_recht'] = $row1->recht;
 				for ($i = 1; $i <= 9; $i++) if (!is_bool(strrpos($row1->user_rechte,''.$i.''))) $_POST['cb'.$i] = 'on';
@@ -124,7 +128,7 @@ if ( $menu->get(1) == 5 ) {
 			} else {
 			  $_POST['frage'] = '';
 				$_POST['antw'] = array(1=>'');
-				$_POST['poll_recht'] = '';
+				$_POST['poll_recht'] = 1;
 				$_POST['vid'] = '';     
       }
 		}
@@ -141,7 +145,24 @@ if ( $menu->get(1) == 5 ) {
         else $cb_u[$i] = ' ';
         }
 			}
-        						
+			
+			$display = ($_POST['poll_recht'] == 1?'none':'');
+      			
+			echo
+'<script type="text/javascript">
+function show_trs () {
+  if (document.getElementById("tr1").style.display == "none") {
+    document.getElementById("tr1").style.display = "";
+    document.getElementById("tr2").style.display = "";
+    document.getElementById("tr3").style.display = "";
+  } else {
+    document.getElementById("tr1").style.display = "none";
+    document.getElementById("tr2").style.display = "none";
+    document.getElementById("tr3").style.display = "none";
+  }
+}      
+</script>';
+              						
 			echo '<form action="admin.php?vote" method="POST">';
 			echo '<input type="hidden" name="vid" value="'.$_POST['vid'].'" />';
       echo '<table cellpadding="0" cellspacing="0" border="0"><tr><td><img src="include/images/icons/admin/vote.png" /></td><td width="30"></td><td valign="bottom"><h1>Umfrage</h1></td></tr></table>';
@@ -150,9 +171,9 @@ if ( $menu->get(1) == 5 ) {
 		  echo '<tr><td width="100" class="Cmite">Frage</td>';
 		  echo '<td width="500" class="Cnorm"><input type="text" size="40" value="'.$_POST['frage'].'" name="frage"></td></tr>';
 		  echo '<tr><td width="100" class="Cmite">F&uuml;r</td>';
-		  echo '<td width="500" class="Cnorm"><select name="poll_recht">'. getPollRecht($_POST['poll_recht']) .'</select></td></tr>';
+		  echo '<td width="500" class="Cnorm"><select name="poll_recht" onchange="show_trs();">'. getPollRecht($_POST['poll_recht']) .'</select></td></tr>';
 			
-      echo '<tr><td class="Cmite">Userklassen<font class="smalfont"> (nur bei registrierte)<br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm">'.
+      echo '<tr id="tr1" style="display: '.$display.';"><td class="Cmite">Userklassen<font class="smalfont"><br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm">'.
       
       '<table border="0" cellpadding="0" cellspacing="0"><tr>'.
       '<td><input type="checkbox" name="cb1"'.$cb_u[1].'/>User</td>'.
@@ -165,9 +186,12 @@ if ( $menu->get(1) == 5 ) {
       '<td><input type="checkbox" name="cb8"'.$cb_u[8].'/>CoAdmin</td>'.
       '<td><input type="checkbox" name="cb9"'.$cb_u[9].'/>Admin</td>'.
       '</tr></table>
+      </td></tr>
+      <tr id="tr2" style="display: '.$display.';"><td class="Cmite">Ergebnis für andere sichtbar ab:</td><td class="Cnorm">
+      <select name="view">'.dblistee($row1->view,'SELECT id,name FROM `prefix_grundrechte` ORDER BY id DESC').'</select>
       </td></tr>';
       
-      echo '<tr><td class="Cmite">Gruppen<font class="smalfont"> (nur bei registrierte)<br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm"><table><tr>';
+      echo '<tr id="tr3" style="display: '.$display.';"><td class="Cmite">Gruppen<font class="smalfont"><br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm"><table><tr>';
       $spalten = 0;
       foreach($groups as $group) {
         if ($spalten >= 4) {
@@ -195,7 +219,7 @@ if ( $menu->get(1) == 5 ) {
 			?>
 <script language="JavaScript" type="text/javascript">
     <!--
-      
+     
 			function delcheck ( DELID ) {
 			  var frage = confirm ( "Willst du diesen Eintrag wirklich löschen?" );
 				if ( frage == true ) {
