@@ -138,7 +138,7 @@ if (empty($_POST['add'])) {
         $_POST['answers'] = $row1->answers;
     	$_POST['maxvotes'] = $row1->maxvotes;
         for ($i = 1; $i <= 9; $i++) if (!is_bool(strrpos($row1->user_rechte, '' . $i . ''))) $_POST['cb' . $i] = 'on';
-        foreach (explode('#', $row1->groups) as $group) $_POST['cb_gr' . $group['id']] = 'on';
+        foreach (explode('#', $row1->groups) as $groupId) $_POST['cb_gr' . $groupId] = 'on';
         $_POST['antw'] = array();
         $erg2 = db_query('SELECT sort,antw FROM `prefix_poll_res` WHERE poll_id = "' . $poll_id . '" ORDER BY sort');
         while ($row2 = db_fetch_object($erg2)) {
@@ -203,7 +203,7 @@ echo '<tr><td class="Cmite">Antwortm&ouml;glichkeiten<br /><small>mehrere Antwor
       </tr><tr><td class="Cmite">F&uuml;r</td>';
 echo '<td width="500" class="Cnorm"><select name="poll_recht" onchange="show_trs();">' . getPollRecht($_POST['poll_recht']) . '</select></td></tr>';
 
-echo '<tr id="tr1" style="display: ' . $display . ';"><td class="Cmite">Userklassen<font class="smalfont"><br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm">' .
+echo '<tr id="tr1" style="display: ' . $display . ';"><td class="Cmite">Userklassen<font class="smalfont"><br />Wenn keiner ausgewï¿½hlt ist kï¿½nnen alle voten</font></td><td class="Cnorm">' .
 
 '<table border="0" cellpadding="0" cellspacing="0"><tr>' .
 '<td><input type="checkbox" name="cb1"' . $cb_u[1] . '/>User</td>' .
@@ -217,11 +217,11 @@ echo '<tr id="tr1" style="display: ' . $display . ';"><td class="Cmite">Userklas
 '<td><input type="checkbox" name="cb9"' . $cb_u[9] . '/>Admin</td>' .
 '</tr></table>
       </td></tr>
-      <tr id="tr2" style="display: ' . $display . ';"><td class="Cmite">Ergebnis für andere sichtbar ab:</td><td class="Cnorm">
+      <tr id="tr2" style="display: ' . $display . ';"><td class="Cmite">Ergebnis fï¿½r andere sichtbar ab:</td><td class="Cnorm">
       <select name="view">' . dblistee($row1->view, 'SELECT id,name FROM `prefix_grundrechte` ORDER BY id DESC') . '</select>
       </td></tr>';
 
-echo '<tr id="tr3" style="display: ' . $display . ';"><td class="Cmite">Gruppen<font class="smalfont"><br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm"><table><tr>';
+echo '<tr id="tr3" style="display: ' . $display . ';"><td class="Cmite">Gruppen<font class="smalfont"><br />Wenn keiner ausgewï¿½hlt ist kï¿½nnen alle voten</font></td><td class="Cnorm"><table><tr>';
 $spalten = 0;
 foreach($groups as $group) {
     if ($spalten >= 4) {
@@ -250,7 +250,7 @@ echo '<tr class="Chead"><td colspan="5"><b>Vote verwalten</b></td></tr>';
     <!--
 
 			function delcheck ( DELID ) {
-			  var frage = confirm ( "Willst du diesen Eintrag wirklich löschen?" );
+			  var frage = confirm ( "Willst du diesen Eintrag wirklich lï¿½schen?" );
 				if ( frage == true ) {
 				  document.location.href="?vote-del&del="+DELID;
 				}

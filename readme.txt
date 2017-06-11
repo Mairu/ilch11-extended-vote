@@ -12,6 +12,9 @@ Adminmenü: Erweitert um die Auswahl für welche Usergruppen/Teams/Gruppen ein Vot
 
 Changelog:
 ----------
+°Version 1.5b:
+    - Fehler beim Editieren von Umfragen mit Gruppen behoben
+
 °Version 1.5:
 	- Fehler beim Editieren von Umfragen bei denen man Antworten hinzufügt behoben
 	- Option für maximale Abstimmanzahl hinzugefügt
