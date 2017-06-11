@@ -1,4 +1,4 @@
-Erweiterte Umfrage 1.3 für IlchClan 1.1 (A-F):
+Erweiterte Umfrage 1.3b für IlchClan 1.1 (A-F):
 """""""""""""""""""""""
 Beschreibung:
 -------------
@@ -11,6 +11,10 @@ Adminmenü: Erweitert um die Auswahl für welche Usergruppen/Teams/Gruppen ein Vot
 
 Changelog:
 ----------
+°Version 1.3b:
+	- Bugfix in include/admin/vote.php, Fehler erzeugte Fehlermeldung,
+	  wenn man kein Datum eingefügt hatte beim ändern/einfügen einer neuen Umfrage
+
 °Version 1.3:
 	- Ablaufdatum hinzugefügt, wird nach dem Ablaufdatum ein Stimme abgegeben
 	  wird diese nicht mehr gezählt und die Umfrage geschlossen

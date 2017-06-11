@@ -73,11 +73,11 @@ if ( $menu->get(1) == 5 ) {
 // A L L E   V O T E S   W E R D E N   A N G E Z E I G T
 
     //Datum und Zeit auslesen
-    if ( isset($_POST['datum']) ) {
+    if ( isset($_POST['datum']) AND preg_match('/\d\d.\d\d.\d\d\d\d/',$_POST['datum']) == 1 ) {
       $d = explode('.',$_POST['datum']);
       if (checkdate($d[1],$d[0],$d[2])) {
         $datum = $_POST['datum'];
-        if ( isset($_POST['zeit']) ) {
+        if ( isset($_POST['zeit']) AND preg_match('/\d\d:\d\d/',$_POST['zeit']) == 1 ) {
           $h = intval(substr($_POST['zeit'],0,2));
           $m = intval(substr($_POST['zeit'],2));
           if ( $h >= 0 AND $h < 24 AND $m >= 0 AND $m < 60) {
