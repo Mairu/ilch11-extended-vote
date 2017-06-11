@@ -36,8 +36,8 @@ $stunden = 24;
 		} else {
 			$imPollArrayDrin = false;
 		}
-    
-    if (!$imPollArrayDrin OR (count($tovote) == 0 AND $fraRow->view >= $_SESSION['authright']) OR $fraRow->view >= $_SESSION['authright']) {
+
+    if (!$imPollArrayDrin OR (count($tovote) == 0 AND $fraRow->view >= $_SESSION['authright'])) {
       if ($fraRow->recht == 2) { 
         if ($fraRow->user_rechte == '') $fraRow->user_rechte = '0123456789';
         if (!empty($fraRow->groups)) {
@@ -48,15 +48,12 @@ $stunden = 24;
         elseif (strpos($fraRow->user_rechte,''.abs($_SESSION['authright'])) !== false) {
           $abstimmen = true;
         }
-      } else {
-        if (!$imPollArrayDrin) $abstimmen = true;
-        else $abstimmen = false;        
-      }
+      } else { $abstimmen = true; }
       
       if ($abstimmen AND !$imPollArrayDrin) {
         $pollid = $fraRow->poll_id;
         break;
-      } else {
+      } elseif ($fraRow->view >= $_SESSION['authright']) {
         $voted[] = $fraRow->poll_id;
         }
       }
@@ -65,6 +62,9 @@ $stunden = 24;
   
   if ($pollid == 0 AND count($voted) > 0) {
     $pollid = $voted[array_rand($voted,1)];
+    $voted = true;
+  } else {
+    $voted = false;
   }
     
   if ($pollid != 0) {
@@ -90,7 +90,7 @@ $stunden = 24;
 		if ($fraRow->exptime > 0) {
       echo '<br /><small>(bis '.date('H.i \U\h\r - d.m.Y',$fraRow->exptime).')</small>';
     }
-		if ( in_array ( $inTextAr , $textAr ) OR $fraRow->stat == 0) {
+		if ( in_array ( $inTextAr , $textAr ) OR $fraRow->stat == 0 OR $voted) {
 			  echo '<table width="100%" cellpadding="0">';
 		    $imPollArrayDrin = true;
 		} else {
@@ -101,7 +101,7 @@ $stunden = 24;
     $pollErg = db_query('SELECT antw, res, sort FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow->poll_id.'" ORDER BY sort');
 		while ( $pollRow = db_fetch_object($pollErg) ) {
 		    if ( $imPollArrayDrin ) {
-						echo '<tr><td>'.$pollRow->antw.'</td><td align="right">'.$pollRow->res.' ('.round($pollRow->res/$ges*100,1).'%)</td></tr>';
+						echo '<tr><td>'.$pollRow->antw.'</td><td align="right">'.$pollRow->res.' ('.round($pollRow->res/($ges>0?$ges:1)*100,1).'%)</td></tr>';
 		    } else {
 			      $i++;
             echo '<input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';

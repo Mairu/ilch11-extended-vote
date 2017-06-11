@@ -1,4 +1,4 @@
-Erweiterte Umfrage 1.3b für IlchClan 1.1 (A-F):
+Erweiterte Umfrage 1.3c für IlchClan 1.1 (A-F):
 """""""""""""""""""""""
 Beschreibung:
 -------------
@@ -11,6 +11,10 @@ Adminmenü: Erweitert um die Auswahl für welche Usergruppen/Teams/Gruppen ein Vot
 
 Changelog:
 ----------
+°Version 1.3c:
+	- Bugfix: Es konnten auch andere Membergruppen abstimmen als angegben :S
+	- Bugfix keine Division durch 0 mehr
+
 °Version 1.3b:
 	- Bugfix in include/admin/vote.php, Fehler erzeugte Fehlermeldung,
 	  wenn man kein Datum eingefügt hatte beim ändern/einfügen einer neuen Umfrage
