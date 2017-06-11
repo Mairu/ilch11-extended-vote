@@ -1,12 +1,21 @@
-Erweiterte Umfrage (Votegruppen) IlchClan 1.1:
+Erweiterte Umfrage (Votegruppen) 1.1 für IlchClan 1.1C:
 """""""""""""""""""""""
 Beschreibung:
 -------------
-Man kann bei Umfragen angeben, welche Usergruppen an der Umfrage teilnehmen können.
+Man kann bei Umfragen angeben, welche Usergruppen und Teams/Gruppen an der Umfrage teilnehmen können.
 
 Box: Hier wird die letzte Umfrage angezeigt, bei der man selbst abstimmmen kann.
-Content: Bei Umfragen, die nicht für die eigene Usergruppe sind, wird nur das Ergebnis angezeigt
-Adminmenü: Halt erweitert um die Auswahl für welche Usergruppen ein Vote ist
+Content: Bei Umfragen, die nicht für die eigene Usergruppe/Teams/Gruppen sind, wird nur das Ergebnis angezeigt
+Adminmenü: Halt erweitert um die Auswahl für welche Usergruppen/Teams/Gruppen ein Vote ist
+
+Changelog:
+----------
+°Version 1.1:
+	- Funktion für Teams/Gruppen hinzugefügt
+	- Codeoptimierung
+
+°Version 1.0:
+	- erstes Release mit Funktion für Usergruppen 
 
 Entwickelt
 ----------
@@ -33,4 +42,4 @@ Ich übernehme keine Haftung für Schäden, die durch dieses Skript entstehen.
 Benutzung ausschließlich AUF EIGENE GEFAHR.
 
 
-Fehler bitte im Forum melden ( http://www.ilch.de/forum-showposts-14160.html )
+Fehler bitte im Forum melden ( http://www.ilch.de/forum-showposts-15531.html )

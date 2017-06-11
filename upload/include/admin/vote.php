@@ -48,7 +48,6 @@ function getPollRecht ( $akt ) {
 	}
 	return ($liste);
 }
-
 $um = $menu->get(1);
 if ( $menu->get(1) == 'del' ) {
 	  db_query('DELETE FROM `prefix_poll` WHERE poll_id = "'.$_GET['del'].'"');
@@ -58,27 +57,31 @@ if ( $menu->get(1) == 5 ) {
 	  db_query('UPDATE `prefix_poll` SET stat = "'.$_GET['ak'].'" WHERE poll_id = "'.$_GET['id'].'"');
 }
 
-    
-    
+//Gruppen auslesen
+      $groups = array();
+			$erg3 = db_query('SELECT id, name FROM prefix_groups');
+      $i = 0;
+      while ($row3 = db_fetch_object($erg3)) {
+      $groups[$i]['id'] = $row3->id;
+      $groups[$i]['name'] = $row3->name;
+      $groups[$i]['checked'] = '';
+      $i++;       
+      }    
     
 // A L L E   V O T E S   W E R D E N   A N G E Z E I G T			
   
 
     if ( isset($_POST['sub']) ) {
-    	
-      if ($_POST['cb1'] == 'on') $usr = '1'; else $usr = '';
-			if ($_POST['cb2'] == 'on') $usr .= '2';
-			if ($_POST['cb3'] == 'on') $usr .= '3';
-			if ($_POST['cb4'] == 'on') $usr .= '4';
-			if ($_POST['cb5'] == 'on') $usr .= '5';
-			if ($_POST['cb6'] == 'on') $usr .= '6';
-			if ($_POST['cb7'] == 'on') $usr .= '7';
-			if ($_POST['cb8'] == 'on') $usr .= '8';
-			if ($_POST['cb9'] == 'on') $usr .= '9';
-			if ($_POST['poll_recht'] == 1) $usr = '';
-          
+      
+      $grps = '';
+      $usr = '';
+      if ($_POST['poll_recht'] >= 1) {
+      foreach($groups as $id => $group) if ($_POST['cb_gr'.$group['id']] == 'on') $grps .='#'.$group['id'];    
+      for ($i = 1; $i <= 9; $i++ ) if ($_POST['cb'.$i] == 'on') $usr .= $i;
+			}
+               
 	    if ( empty($_POST['vid']) ) {
-		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'") ' );
+		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'") ' );
 			  $poll_id = db_last_id(); $i = 1;
 			  foreach ($_POST['antw'] as $v) {
 			    if ( ! empty ($v) ) {
@@ -87,7 +90,7 @@ if ( $menu->get(1) == 5 ) {
 				  }
 		    }
 		  } else {
-        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'" WHERE poll_id = "'.$_POST['vid'].'"');
+        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'" WHERE poll_id = "'.$_POST['vid'].'"');
 			  $i = 1;
 				foreach ($_POST['antw'] as $k => $v) {
 				  $a = db_count_query("SELECT COUNT(*) FROM prefix_poll_res WHERE poll_id = ".$_POST['vid']." AND sort = ".$k);
@@ -104,39 +107,41 @@ if ( $menu->get(1) == 5 ) {
       }
 		} 
 		if ( empty($_POST['add']) ) {
+		
 			if ( isset($_GET['vid']) ) {
-			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
+			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
 				$_POST['frage'] = $row1->frage;
 				$_POST['poll_recht'] = $row1->recht;
 				for ($i = 1; $i <= 9; $i++) if (!is_bool(strrpos($row1->user_rechte,''.$i.''))) $_POST['cb'.$i] = 'on';
-       	$_POST['antw'] = array();
+       	foreach (explode('#', $row1->groups) as $group) $_POST['cb_gr'.$group['id']] = 'on';
+        $_POST['antw'] = array();
 				$erg2 = db_query('SELECT sort,antw FROM `prefix_poll_res` WHERE poll_id = "'.$_GET['vid'].'" ORDER BY sort');
 			  while ($row2 = db_fetch_object($erg2)) {
 					$_POST['antw'][$row2->sort] = $row2->antw;
 				}
+        				
 				$_POST['vid'] = $_GET['vid'];
 			} else {
 			  $_POST['frage'] = '';
 				$_POST['antw'] = array(1=>'');
 				$_POST['poll_recht'] = '';
-				$_POST['vid'] = '';
-			}
+				$_POST['vid'] = '';     
+      }
 		}
 			$anzFeld = count($_POST['antw']);
 			if ( isset ($_POST['add']) ) {
 			  $anzFeld++;
 				$_POST['antw'][] = '';
 			}
-			if ($_POST['cb1'] == 'on') $cb1c = ' checked="checked" '; else $cb1c = ' ';
-			if ($_POST['cb2'] == 'on') $cb2c = ' checked="checked" '; else $cb2c = ' ';
-			if ($_POST['cb3'] == 'on') $cb3c = ' checked="checked" '; else $cb3c = ' ';
-			if ($_POST['cb4'] == 'on') $cb4c = ' checked="checked" '; else $cb4c = ' ';
-			if ($_POST['cb5'] == 'on') $cb5c = ' checked="checked" '; else $cb5c = ' ';
-			if ($_POST['cb6'] == 'on') $cb6c = ' checked="checked" '; else $cb6c = ' ';
-			if ($_POST['cb7'] == 'on') $cb7c = ' checked="checked" '; else $cb7c = ' ';
-			if ($_POST['cb8'] == 'on') $cb8c = ' checked="checked" '; else $cb8c = ' ';
-			if ($_POST['cb9'] == 'on') $cb9c = ' checked="checked" '; else $cb9c = ' ';
-						
+			
+      if ( isset($_GET['vid']) OR !empty($_POST['add'])) {
+      foreach($groups as $id => $group) if ($_POST['cb_gr'.$group['id']] == 'on') $groups[$id]['checked'] = 'checked="checked"';
+      for ($i = 1; $i <= 9; $i++) {
+        if ($_POST['cb'.$i] == 'on') $cb_u[$i] = 'checked="checked" ';
+        else $cb_u[$i] = ' ';
+        }
+			}
+        						
 			echo '<form action="admin.php?vote" method="POST">';
 			echo '<input type="hidden" name="vid" value="'.$_POST['vid'].'" />';
       echo '<table cellpadding="0" cellspacing="0" border="0"><tr><td><img src="include/images/icons/admin/vote.png" /></td><td width="30"></td><td valign="bottom"><h1>Umfrage</h1></td></tr></table>';
@@ -150,17 +155,29 @@ if ( $menu->get(1) == 5 ) {
       echo '<tr><td class="Cmite">Userklassen<font class="smalfont"> (nur bei registrierte)<br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm">'.
       
       '<table border="0" cellpadding="0" cellspacing="0"><tr>'.
-      '<td><input type="checkbox" name="cb1"'.$cb1c.'/>User</td>'.
-      '<td><input type="checkbox" name="cb2"'.$cb2c.'/>Superuser</td>'.
-      '<td><input type="checkbox" name="cb3"'.$cb3c.'/>Trialmember</td>'.
-      '<td><input type="checkbox" name="cb4"'.$cb4c.'/>Member</td></tr><tr>'.
-      '<td><input type="checkbox" name="cb5"'.$cb5c.'/>CoLeader</td>'.
-      '<td><input type="checkbox" name="cb6"'.$cb6c.'/>Leader</td>'.
-      '<td><input type="checkbox" name="cb7"'.$cb7c.'/>SiteAdmin</td>'.
-      '<td><input type="checkbox" name="cb8"'.$cb8c.'/>CoAdmin</td>'.
-      '<td><input type="checkbox" name="cb9"'.$cb9c.'/>Admin</td>'.
+      '<td><input type="checkbox" name="cb1"'.$cb_u[1].'/>User</td>'.
+      '<td><input type="checkbox" name="cb2"'.$cb_u[2].'/>Superuser</td>'.
+      '<td><input type="checkbox" name="cb3"'.$cb_u[3].'/>Trialmember</td>'.
+      '<td><input type="checkbox" name="cb4"'.$cb_u[4].'/>Member</td></tr><tr>'.
+      '<td><input type="checkbox" name="cb5"'.$cb_u[5].'/>CoLeader</td>'.
+      '<td><input type="checkbox" name="cb6"'.$cb_u[6].'/>Leader</td>'.
+      '<td><input type="checkbox" name="cb7"'.$cb_u[7].'/>SiteAdmin</td>'.
+      '<td><input type="checkbox" name="cb8"'.$cb_u[8].'/>CoAdmin</td>'.
+      '<td><input type="checkbox" name="cb9"'.$cb_u[9].'/>Admin</td>'.
       '</tr></table>
       </td></tr>';
+      
+      echo '<tr><td class="Cmite">Gruppen<font class="smalfont"> (nur bei registrierte)<br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm"><table><tr>';
+      $spalten = 0;
+      foreach($groups as $group) {
+        if ($spalten >= 4) {
+          $spalten = 1;
+          echo '</tr></tr>';      
+        }
+        else $spalten++;
+        echo '<td><input type="checkbox" name="cb_gr'.$group['id'].'" '.$group['checked'].' />'.$group['name'].'</td>';
+      }
+      echo '</tr></table></td></tr>';
             
       
       for ($i=1;$i<=$anzFeld; $i++) {
@@ -218,4 +235,3 @@ if ( $menu->get(1) == 5 ) {
 
 $design->footer();
 ?>
-

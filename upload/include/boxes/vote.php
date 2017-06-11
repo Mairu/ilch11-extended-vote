@@ -31,8 +31,15 @@ $stunden = 24;
   $fraRow = db_fetch_object($fraErg);
   
   if ($fraRow->user_rechte == '') $fraRow->user_rechte = '0123456789';
-		if ($_SESSION['authright'] < 0) $posar = 1; else $posar = 0; 
-    if (!is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) {
+		if ($_SESSION['authright'] < 0) $posar = 1; else $posar = 0;
+    
+    if (!empty($fraRow->groups)) {
+      $votegroups = explode('#', $fraRow->groups);
+		  foreach ($_SESSION['authgrp'] as $id => $authgroup) if (in_array($id, $votegroups)) $showpoll = TRUE;
+		  if (is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $showpoll = FALSE;
+		  $spollid = $fraRow->poll_id;
+    }
+    elseif (!is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) {
     $spollid = $fraRow->poll_id;
     $showpoll = TRUE;
     }  
@@ -42,7 +49,6 @@ $stunden = 24;
   if ($spollid != 0) $fraErg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' AND poll_id = '.$spollid.' ORDER BY poll_id DESC LIMIT 1');
   else $fraErg = db_query('SELECT * FROM `prefix_poll` WHERE recht '.$woR.' ORDER BY poll_id DESC LIMIT 1');
   
-
 	if ( db_num_rows($fraErg) > 0) {
 	
 	$fraRow = db_fetch_object($fraErg);

@@ -84,8 +84,14 @@ while ($fraRow = db_fetch_object($erg)) {
 		
     
     if ($fraRow->user_rechte == '') $fraRow->user_rechte = '0123456789';
-		if ($_SESSION['authright'] < 0) $posar = 1; else $posar = 0; 
-    if (!is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $abstimmen = TRUE; else $abstimmen = FALSE;
+		if ($_SESSION['authright'] < 0) $posar = 1; else $posar = 0;
+		if (!empty($fraRow->groups)) {
+      $votegroups = explode('#', $fraRow->groups);
+		  foreach ($_SESSION['authgrp'] as $id => $authgroup) if (in_array($id, $votegroups)) $abstimmen = TRUE;
+		  if (is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $abstimmen = FALSE;
+    }
+    elseif (!is_bool(strrpos($fraRow->user_rechte,substr($_SESSION['authright'],$posar)))) $abstimmen = TRUE;
+    else $abstimmen = FALSE;
     
     echo '<tr><td class="Cdark"><b>'.$fraRow->frage.'</b></td></tr>';
 		if ( $class == 'Cnorm' ) { $class = 'Cmite'; } else { $class = 'Cnorm'; }
