@@ -108,16 +108,16 @@ if ( $menu->get(1) == 5 ) {
         $timestamp = 0;
       }      
 	    if ( empty($_POST['vid']) ) {
-		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'", '.$view.', '.$timestamp.') ');
+		    db_query('INSERT INTO `prefix_poll` (`frage`, `recht`, `stat`, `text`, `user_rechte`, `groups`, `view`, `exptime`, `answers`) VALUES ( "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'", '.$view.', '.$timestamp.', '.escape($_POST['answers'],'integer').' ) ');
 			  $poll_id = db_last_id(); $i = 1;
 			  foreach ($_POST['antw'] as $v) {
 			    if ( ! empty ($v) ) {
-				   db_query('INSERT INTO `prefix_poll_res` VALUES ( "'.$i.'" , "'.$poll_id.'" , "'.$v.'" , "" ) ' );
+				   db_query('INSERT INTO `prefix_poll_res` (`sort`, `poll_id`, `antw`) VALUES ( "'.$i.'" , "'.$poll_id.'" , "'.$v.'")' );
 	         $i++;
 				  }
 		    }
 		  } else {
-        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.', exptime = '.$timestamp.' WHERE poll_id = "'.$_POST['vid'].'"');
+        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.', exptime = '.$timestamp.', answers = '.escape($_POST['answers'],'integer').' WHERE poll_id = "'.$_POST['vid'].'"');
 			  $i = 1;
 				foreach ($_POST['antw'] as $k => $v) {
 				  $a = db_count_query("SELECT COUNT(*) FROM prefix_poll_res WHERE poll_id = ".$_POST['vid']." AND sort = ".$k);
@@ -138,9 +138,10 @@ if ( $menu->get(1) == 5 ) {
 		if ( empty($_POST['add']) ) {
 		
 			if ( isset($_GET['vid']) ) {
-			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups, view, exptime FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
+			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups, view, exptime, answers FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
 				$_POST['frage'] = $row1->frage;
 				$_POST['poll_recht'] = $row1->recht;
+				$_POST['answers'] = $row1->answers;
 				for ($i = 1; $i <= 9; $i++) if (!is_bool(strrpos($row1->user_rechte,''.$i.''))) $_POST['cb'.$i] = 'on';
        	foreach (explode('#', $row1->groups) as $group) $_POST['cb_gr'.$group['id']] = 'on';
         $_POST['antw'] = array();
@@ -157,7 +158,8 @@ if ( $menu->get(1) == 5 ) {
 			  $_POST['frage'] = '';
 				$_POST['antw'] = array(1=>'');
 				$_POST['poll_recht'] = 1;
-				$_POST['vid'] = '';     
+				$_POST['vid'] = '';
+        $_POST['answers'] = 1;   
       }
 		}
 			$anzFeld = count($_POST['antw']);
@@ -200,7 +202,8 @@ function show_trs () {
 		  echo '<td width="500" class="Cnorm"><input type="text" size="74" value="'.$_POST['frage'].'" name="frage"></td></tr>';
 		  echo '<tr><td class="Cmite">Umfrage l&auml;uft aus am:<br /><small>Wenn nicht angegeben, l&auml;uft sie nie von alleine aus</small></td>';
       echo '<td class="Cnorm">Datum (Format: DD.MM.YYYY) <input type="text" value="'.$datum.'" name="datum" size="10"/> &nbsp; Zeit: (Format HH:MM) <input type="text" value="'.$zeit.'" name="zeit" size="5"/></td></tr>';      
-      echo '<tr><td class="Cmite">F&uuml;r</td>';
+      echo '<tr><td class="Cmite">Antwortm&ouml;glichkeiten<br /><small>mehrere Antworten ausw&auml;hlen; 1 f&uuml;r normale Umfrage</small></td><td class="Cnorm"><input type="input" size="2" maxlength="2" name="answers" value="'.$_POST['answers'].'"/></td>      
+      </tr><tr><td class="Cmite">F&uuml;r</td>';
 		  echo '<td width="500" class="Cnorm"><select name="poll_recht" onchange="show_trs();">'. getPollRecht($_POST['poll_recht']) .'</select></td></tr>';
 			
       echo '<tr id="tr1" style="display: '.$display.';"><td class="Cmite">Userklassen<font class="smalfont"><br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm">'.

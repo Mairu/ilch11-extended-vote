@@ -18,15 +18,33 @@ defined ('main') or die ( 'no direct access' );
 ####
 ##### ins vote
 $um = $menu->get(1);
+$info = '';
 if ($menu->getA(1) == 'W') {
 
-  $poll_id = escape ($menu->getE(1), 'integer');
-	$radio = escape ($_POST['radio'], 'integer');
-	
+
+	  $poll_id = escape ($menu->getE(1), 'integer');
 		$fraRow = db_fetch_object(db_query("SELECT * FROM prefix_poll WHERE poll_id = '".$poll_id."'"));
-	  if ($fraRow->exptime != 0 AND $fraRow->exptime < time()) {
+    $vote = true;
+    
+	  if ($fraRow->answers <= 1) {
+      $radio = ' = '.escape ($_POST['radio'], 'integer');
+    } else {
+      if ($fraRow->answers < count($_POST['radio'])) {
+        $vote = false;
+        $info = '<span style="color:red; font-size: 16px; font-weight:bold;">Es sind maximal '.$fraRow->answers.' Antworten m&ouml;glich</span><br />';
+      } else {
+        $radio = ' IN (';
+        foreach ($_POST['radio'] as $k => $v) {
+          $radio .= escape($_POST['radio'][$k],'integer').',';
+        }
+        $radio = substr($radio,0,-1).')';
+      }
+    }  
+    
+    
+    if ($fraRow->exptime != 0 AND $fraRow->exptime < time()) {
       db_query("UPDATE `prefix_poll` SET stat = 0 WHERE poll_id = $poll_id");
-    } else { 
+    } else {
       $textAr = explode('#',$fraRow->text);
   	  if ($fraRow->recht == 2) {
   		  $inTextAr = $_SESSION['authid'];
@@ -37,7 +55,7 @@ if ($menu->getA(1) == 'W') {
   			$textAr[] = $inTextAr;
   		  $textArString = implode('#',$textAr);
         db_query('UPDATE `prefix_poll` SET text = "'.$textArString.'" WHERE poll_id = "'.$poll_id.'"');
-  		  db_query('UPDATE `prefix_poll_res` SET res = res + 1 WHERE poll_id = "'.$poll_id.'" AND sort = "'.$radio.'" LIMIT 1') or die (db_error());
+  		  db_query('UPDATE `prefix_poll_res` SET res = res + 1 WHERE poll_id = "'.$poll_id.'" AND sort '.$radio) or die (db_error());
   		}
 		}
 }
@@ -51,6 +69,7 @@ $title = $allgAr['title'].' :: '.$lang['vote'];
 $hmenu = $lang['vote'];
 $design = new design ( $title , $hmenu );
 $design->header();
+echo $info;
 
 ?>
 <table width="100%" cellpadding="2" cellspacing="1" border="0" class="border">
@@ -105,7 +124,7 @@ while ($zaehler < $limit AND $fraRow = db_fetch_object($erg)) {
     
     if (!$imPollArrayDrin OR $fraRow->view >= $_SESSION['authright']) {
     $zaehler++; 
-    echo '<tr><td class="Cdark"><b>'.$fraRow->frage.'</b>';
+    echo '<tr><td class="Cdark"><b>'.$fraRow->frage.($fraRow->answers > 1 ? " ($fraRow->answers Antworten m&ouml;glich)" : '').'</b>';
     if ($fraRow->stat == 0 ) { echo ' (geschlossen)'; }
     elseif ($fraRow->exptime > 0) { echo ' (bis '.date('H.i \U\h\r - d.m.Y',$fraRow->exptime).')'; }
     echo '</td></tr>';
@@ -146,8 +165,12 @@ while ($zaehler < $limit AND $fraRow = db_fetch_object($erg)) {
 				    echo '<td width="20%" align="right">'.$pollRow->res.'</td></tr>';
 				} else {
             $i++;
-			      echo '<input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
-		    }
+            if ($fraRow->answers <= 1) {
+			        echo '<input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
+		        } else {
+              echo '<input type="checkbox" id="vote'.$i.'" name="radio[]" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
+            }
+        }
 		} 
 		if ( $imPollArrayDrin ) {
 			  echo '<tr><td colspan="2" align="right">'.$lang['whole'].': &nbsp; '.$ges.'</td></tr></table>';

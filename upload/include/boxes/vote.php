@@ -86,7 +86,7 @@ $stunden = 24;
 		  $inTextAr = $_SERVER['REMOTE_ADDR'];
 		}
 		
-		echo '<b>'.$fraRow->frage.'</b>';
+		echo '<b>'.$fraRow->frage.($fraRow->answers > 1 ? " ($fraRow->answers Antworten m&ouml;glich)" : '').'</b>';
 		if ($fraRow->exptime > 0) {
       echo '<br /><small>(bis '.date('H.i \U\h\r - d.m.Y',$fraRow->exptime).')</small>';
     }
@@ -104,7 +104,11 @@ $stunden = 24;
 						echo '<tr><td>'.$pollRow->antw.'</td><td align="right">'.$pollRow->res.' ('.round($pollRow->res/($ges>0?$ges:1)*100,1).'%)</td></tr>';
 		    } else {
 			      $i++;
-            echo '<input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
+            if ($fraRow->answers <= 1) {
+			        echo '<input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
+		        } else {
+              echo '<input type="checkbox" id="vote'.$i.'" name="radio[]" value="'.$pollRow->sort.'"><label for="vote'.$i.'"> '.$pollRow->antw.'</label><br>';
+            }
 		    }
 		} 
 		if ( $imPollArrayDrin ) {

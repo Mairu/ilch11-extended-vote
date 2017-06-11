@@ -13,6 +13,7 @@ while ($a = db_fetch_assoc($r)) {
  case 'groups'     : $inst += 2;   break;
  case 'view'       : $inst += 4;   break;
  case 'exptime'    : $inst += 8;   break;
+ case 'answers'    : $inst += 16;  break;
  default:                          break;
  }
 }
@@ -30,7 +31,10 @@ switch ($inst) {
   case 7: //1.2 -> 1.3
   $sql = db_query("ALTER TABLE `prefix_poll` ADD `exptime` INT ( 10 ) NOT NULL DEFAULT '0' ;");
   break;
-  case 15:
+  case 15: //1.3 -> 1.4
+  $sql = db_query("ALTER TABLE `prefix_poll` ADD `answers` TINYINT ( 2 ) NOT NULL DEFAULT '1' ;");
+  break;
+  case 31:
   $sql = 'newest';
   break;
   default: $sql = 'fail';

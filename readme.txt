@@ -1,9 +1,8 @@
-Erweiterte Umfrage 1.3c für IlchClan 1.1 (A-F):
+Erweiterte Umfrage 1.4 für IlchClan 1.1 (A-F):
 """""""""""""""""""""""
 Beschreibung:
 -------------
-Man kann bei Umfragen angeben, welche Usergruppen und Teams/Gruppen an der Umfrage teilnehmen können, 
-ab welchem Recht das Ergebnis sichtbar ist und dass die Umfrage zu einem bestimmten Zeitpunkt ausläuft.
+Man kann bei Umfragen angeben, welche Usergruppen und Teams/Gruppen an der Umfrage teilnehmen können, ab welchem Recht das Ergebnis sichtbar ist und dass die Umfrage zu einem bestimmten Zeitpunkt ausläuft. Außerdem ist es möglich mehrere Antworten zu zulassen.
 
 Box: Hier wird eine Umfrage angezeigt, bei der man abstimmen kann oder eine zufällige von der man das Ergebnis sehen kann.
 Content: Bei Umfragen, die nicht für die eigene Usergruppe/Teams/Gruppen sind und deren Ergebnis man sehen darf, wird das Ergebnis angezeigt.
@@ -11,6 +10,9 @@ Adminmenü: Erweitert um die Auswahl für welche Usergruppen/Teams/Gruppen ein Vot
 
 Changelog:
 ----------
+°Version 1.4:
+	- Mehrere Antwortmöglichkeiten 
+
 °Version 1.3c:
 	- Bugfix: Es konnten auch andere Membergruppen abstimmen als angegben :S
 	- Bugfix keine Division durch 0 mehr
@@ -34,8 +36,6 @@ Changelog:
 °Version 1.0:
 	- erstes Release mit Funktion für Usergruppen
 
-Alle Änderungen sind in der Changes.html markiert
-
 Entwickelt
 ----------
 ° von "Mairu"
@@ -55,6 +55,7 @@ Bekannte Einschränkungen / Fehler:
 ----------------------------------
 ° Bei der Anzeige der Umfragen stimmt die Blätterfunktion nicht immer, also es kann vorkommen,
   dass auf der folgenden Seite Umfragen wiederholt werden.
+° Bei mehreren Antwortmöglichkeiten zählt jede Antwort als eigene Stimme
 
 Haftungsausschluss:
 -------------------
