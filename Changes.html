@@ -3,7 +3,7 @@
   <head>
   <meta http-equiv="content-type" content="text/html; charset=windows-1250">
   <meta name="generator" content="PSPad editor, www.pspad.com">
-  <title>Erweiterte Umfrage 1.2 - &Auml;nderungen durch das Modul</title>
+  <title>Erweiterte Umfrage 1.3 - &Auml;nderungen durch das Modul</title>
   <style type="text/css">
   <!--
   ul { font-weight: bold; margin-left: 0px; }
@@ -16,9 +16,9 @@
   </style>
   </head>
   <body>
-  <h3>Erweiterte Umfrage 1.2 - &Auml;nderungen durch das Modul</h3>
+  <h3>Erweiterte Umfrage 1.3 - &Auml;nderungen durch das Modul</h3>
   <b>MYSQL:</b><br>
-  <pre>ALTER TABLE `<i>prefix</i>_poll` ADD `user_rechte` VARCHAR( 10 ), ADD `groups` VARCHAR( 255 ) NOT NULL, ADD `view` TINYINT( 2 ) NOT NULL DEFAULT '0' ;</pre>
+  <pre>ALTER TABLE `<i>prefix</i>_poll` ADD `user_rechte` VARCHAR( 10 ), ADD `groups` VARCHAR( 255 ) NOT NULL, ADD `view` TINYINT( 2 ) NOT NULL DEFAULT '0', ADD `exptime` INT ( 10 ) NOT NULL DEFAULT '0' ;</pre>
   <h4>Hier sind die Änderungen an den einzelnen Dateien aufgelistet,
   dies wurde mit dem Programm <a href="http://www.componentsoftware.com/Products/csdiff/download.htm">CSDiff 5.0</a> bewerkstelligt.</h4>
   <ul>Ver&auml;nderte Dateien:
@@ -32,7 +32,7 @@
   <pre><span class="HDNormal">&lt;?php 
 #   Copyright by: Manuel Staechele
 #   Support: www.ilch.de
-<a name="diff" id="c0"><span class="HDAdded">#   Modified by Mairu -&gt; Erweiterte Umfrage 1.2
+<a name="diff" id="c0"><span class="HDAdded">#   Modified by Mairu -&gt; Erweiterte Umfrage 1.3
 #   include/admin/vote.php
 </span></a>
 
@@ -104,9 +104,28 @@ if ( $menu-&gt;get(1) == 5 ) {
     
 // A L L E   V O T E S   W E R D E N   A N G E Z E I G T            
   
-
+<a name="diff" id="c3"><span class="HDAdded">    //Datum und Zeit auslesen
+    if ( isset($_POST['datum']) ) {
+      $d = explode('.',$_POST['datum']);
+      if (checkdate($d[1],$d[0],$d[2])) {
+        $datum = $_POST['datum'];
+        if ( isset($_POST['zeit']) ) {
+          $h = intval(substr($_POST['zeit'],0,2));
+          $m = intval(substr($_POST['zeit'],2));
+          if ( $h &gt;= 0 AND $h &lt; 24 AND $m &gt;= 0 AND $m &lt; 60) {
+            $zeit = $_POST['zeit'];
+          }
+        } else {
+          $zeit = '00:00';
+        }
+      } 
+    } else {
+      $datum = '';
+      $zeit = '';
+    }
+</span></a>
     if ( isset($_POST['sub']) ) {
-<a name="diff" id="c3"><span class="HDAdded">      
+<a name="diff" id="c4"><span class="HDAdded">      
       $grps = '';
       $usr = '';
       $view = 0;
@@ -115,9 +134,13 @@ if ( $menu-&gt;get(1) == 5 ) {
       for ($i = 1; $i &lt;= 9; $i++ ) if ($_POST['cb'.$i] == 'on') $usr .= $i;
             $view = escape($_POST['view'],'integer');
       }
-               
+      if ($datum != '') {
+        $timestamp = mktime( substr($zeit,0,2), substr($zeit,3) , 0, substr($datum,3,2) , substr($datum,0,2) , substr($datum,6) );
+      } else {
+        $timestamp = 0;
+      }      
 </span></a>        if ( empty($_POST['vid']) ) {
-            db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" <a name="diff" id="c4"><span class="HDDeleted">) ' </span></a><span class="HDAdded">, "'.$usr.'", "'.$grps.'", '.$view.') '</span>);
+            db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" <a name="diff" id="c5"><span class="HDDeleted">) ' </span></a><span class="HDAdded">, "'.$usr.'", "'.$grps.'", '.$view.', '.$timestamp.') '</span>);
               $poll_id = db_last_id(); $i = 1;
               foreach ($_POST['antw'] as $v) {
                 if ( ! empty ($v) ) {
@@ -126,7 +149,7 @@ if ( $menu-&gt;get(1) == 5 ) {
                   }
             }
           } else {
-        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'"<a name="diff" id="c5"><span class="HDAdded">, user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.'</span></a> WHERE poll_id = "'.$_POST['vid'].'"');
+        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'"<a name="diff" id="c6"><span class="HDAdded">, user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.', exptime = '.$timestamp.'</span></a> WHERE poll_id = "'.$_POST['vid'].'"');
               $i = 1;
                 foreach ($_POST['antw'] as $k =&gt; $v) {
                   $a = db_count_query("SELECT COUNT(*) FROM prefix_poll_res WHERE poll_id = ".$_POST['vid']." AND sort = ".$k);
@@ -141,26 +164,31 @@ if ( $menu-&gt;get(1) == 5 ) {
                     }
                 }
       }
-        } 
+<a name="diff" id="c7"><span class="HDAdded">        $datum = '';
+        $zeit = '';
+</span></a>        } 
         if ( empty($_POST['add']) ) {
-<a name="diff" id="c6"><span class="HDAdded">        
+<a name="diff" id="c8"><span class="HDAdded">        
 </span></a>            if ( isset($_GET['vid']) ) {
-              $row1 = db_fetch_object(db_query('SELECT frage, recht<a name="diff" id="c7"><span class="HDAdded">, user_rechte, groups, view</span></a> FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
+              $row1 = db_fetch_object(db_query('SELECT frage, recht<a name="diff" id="c9"><span class="HDAdded">, user_rechte, groups, view, exptime</span></a> FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
                 $_POST['frage'] = $row1-&gt;frage;
                 $_POST['poll_recht'] = $row1-&gt;recht;
-<a name="diff" id="c8"><span class="HDAdded">                for ($i = 1; $i &lt;= 9; $i++) if (!is_bool(strrpos($row1-&gt;user_rechte,''.$i.''))) $_POST['cb'.$i] = 'on';
+<a name="diff" id="c10"><span class="HDAdded">                for ($i = 1; $i &lt;= 9; $i++) if (!is_bool(strrpos($row1-&gt;user_rechte,''.$i.''))) $_POST['cb'.$i] = 'on';
         foreach (explode('#', $row1-&gt;groups) as $group) $_POST['cb_gr'.$group['id']] = 'on';
 </span></a>                $_POST['antw'] = array();
                 $erg2 = db_query('SELECT sort,antw FROM `prefix_poll_res` WHERE poll_id = "'.$_GET['vid'].'" ORDER BY sort');
               while ($row2 = db_fetch_object($erg2)) {
                     $_POST['antw'][$row2-&gt;sort] = $row2-&gt;antw;
                 }
-<a name="diff" id="c9"><span class="HDAdded">                        
+<a name="diff" id="c11"><span class="HDAdded">                if ($row1-&gt;exptime &gt; 0) {
+        $datum = date('d.m.Y',$row1-&gt;exptime);
+        $zeit = date('H:i',$row1-&gt;exptime);
+        } 
 </span></a>                $_POST['vid'] = $_GET['vid'];
             } else {
               $_POST['frage'] = '';
                 $_POST['antw'] = array(1=&gt;'');
-                $_POST['poll_recht'] = <a name="diff" id="c10"><span class="HDDeleted">''</span></a><span class="HDAdded">1</span>;
+                $_POST['poll_recht'] = <a name="diff" id="c12"><span class="HDDeleted">''</span></a><span class="HDAdded">1</span>;
                 $_POST['vid'] = '';
             }
         }
@@ -170,7 +198,7 @@ if ( $menu-&gt;get(1) == 5 ) {
                 $_POST['antw'][] = '';
             }
             
-<a name="diff" id="c11"><span class="HDAdded">      if ( isset($_GET['vid']) OR !empty($_POST['add'])) {
+<a name="diff" id="c13"><span class="HDAdded">      if ( isset($_GET['vid']) OR !empty($_POST['add'])) {
       foreach($groups as $id =&gt; $group) if ($_POST['cb_gr'.$group['id']] == 'on') $groups[$id]['checked'] = 'checked="checked"';
       for ($i = 1; $i &lt;= 9; $i++) {
         if ($_POST['cb'.$i] == 'on') $cb_u[$i] = 'checked="checked" ';
@@ -200,11 +228,13 @@ function show_trs () {
       echo '&lt;table cellpadding="0" cellspacing="0" border="0"&gt;&lt;tr&gt;&lt;td&gt;&lt;img src="include/images/icons/admin/vote.png" /&gt;&lt;/td&gt;&lt;td width="30"&gt;&lt;/td&gt;&lt;td valign="bottom"&gt;&lt;h1&gt;Umfrage&lt;/h1&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;';
       
             echo '&lt;table width="100%" cellpadding="2" cellspacing="1" border="0" class="border"&gt;';
-          echo '&lt;tr&gt;&lt;td width="100" class="Cmite"&gt;Frage&lt;/td&gt;';
-          echo '&lt;td width="500" class="Cnorm"&gt;&lt;input type="text" size="40" value="'.$_POST['frage'].'" name="frage"&gt;&lt;/td&gt;&lt;/tr&gt;';
-          echo '&lt;tr&gt;&lt;td width="100" class="Cmite"&gt;F&amp;uuml;r&lt;/td&gt;';
-          echo '&lt;td width="500" class="Cnorm"&gt;&lt;select name="poll_recht"<a name="diff" id="c12"><span class="HDAdded"> onchange="show_trs();"</span></a>&gt;'. getPollRecht($_POST['poll_recht']) .'&lt;/select&gt;&lt;/td&gt;&lt;/tr&gt;';
-<span class="HDAdded">            
+          echo '&lt;tr&gt;&lt;td width="1<a name="diff" id="c14"><span class="HDDeleted">00</span></a><span class="HDAdded">55</span>" class="Cmite"&gt;Frage&lt;/td&gt;';
+          echo '&lt;td width="500" class="Cnorm"&gt;&lt;input type="text" size="<span class="HDDeleted">40</span><span class="HDAdded">74</span>" value="'.$_POST['frage'].'" name="frage"&gt;&lt;/td&gt;&lt;/tr&gt;';
+          echo '&lt;tr&gt;&lt;td <span class="HDDeleted">width="100" </span>class="Cmite"&gt;<span class="HDDeleted">F&amp;uuml;r</span><span class="HDAdded">Umfrage l&amp;auml;uft aus am:&lt;br /&gt;&lt;small&gt;Wenn nicht angegeben, l&amp;auml;uft sie nie von alleine aus&lt;/small&gt;</span>&lt;/td&gt;';
+<span class="HDDeleted">          </span><span class="HDAdded">      </span>echo '&lt;td <span class="HDDeleted">width="500" </span>class="Cnorm"&gt;<span class="HDDeleted">&lt;select name="poll_recht"&gt;'. getPollRecht($_POST['poll_recht']) .'&lt;/select&gt;&lt;/</span><span class="HDAdded">Datum (Format: DD.MM.YYYY) &lt;input type="text" value="'.$datum.'" name="datum" size="10"/&gt; &amp;nbsp; Zeit: (Format HH:MM) &lt;input type="text" value="'.$zeit.'" name="zeit" size="5"/&gt;&lt;/</span>td&gt;&lt;/tr&gt;';<span class="HDAdded">      </span>
+<span class="HDAdded">      echo '&lt;tr&gt;&lt;td class="Cmite"&gt;F&amp;uuml;r&lt;/td&gt;';
+          echo '&lt;td width="500" class="Cnorm"&gt;&lt;select name="poll_recht" onchange="show_trs();"&gt;'. getPollRecht($_POST['poll_recht']) .'&lt;/select&gt;&lt;/td&gt;&lt;/tr&gt;';
+            
       echo '&lt;tr id="tr1" style="display: '.$display.';"&gt;&lt;td class="Cmite"&gt;Userklassen&lt;font class="smalfont"&gt;&lt;br /&gt;Wenn keiner ausgewählt ist können alle voten&lt;/font&gt;&lt;/td&gt;&lt;td class="Cnorm"&gt;'.
       
       '&lt;table border="0" cellpadding="0" cellspacing="0"&gt;&lt;tr&gt;'.
@@ -295,7 +325,7 @@ $design-&gt;footer();
   <pre><span class="HDNormal">&lt;?php 
 #   Copyright by: Manuel Staechele
 #   Support: www.ilch.de
-<a name="diff" id="c0"><span class="HDAdded">#   Modified by Mairu -&gt; Erweiterte Umfrage 1.2
+<a name="diff" id="c0"><span class="HDAdded">#   Modified by Mairu -&gt; Erweiterte Umfrage 1.3
 #   include/contents/vote.php
 </span></a>
 
@@ -318,7 +348,10 @@ if ($menu-&gt;getA(1) == 'W') {
     $radio = escape ($_POST['radio'], 'integer');
     
         $fraRow = db_fetch_object(db_query("SELECT * FROM prefix_poll WHERE poll_id = '".$poll_id."'"));
-      $textAr = explode('#',$fraRow-&gt;text);
+<a name="diff" id="c1"><span class="HDAdded">      if ($fraRow-&gt;exptime != 0 AND $fraRow-&gt;exptime &lt; time()) {
+      db_query("UPDATE `prefix_poll` SET stat = 0 WHERE poll_id = $poll_id");
+    } else { 
+</span></a>      $textAr = explode('#',$fraRow-&gt;text);
       if ($fraRow-&gt;recht == 2) {
           $inTextAr = $_SESSION['authid'];
         } elseif ($fraRow-&gt;recht == 1) {
@@ -330,7 +363,7 @@ if ($menu-&gt;getA(1) == 'W') {
       db_query('UPDATE `prefix_poll` SET text = "'.$textArString.'" WHERE poll_id = "'.$poll_id.'"');
           db_query('UPDATE `prefix_poll_res` SET res = res + 1 WHERE poll_id = "'.$poll_id.'" AND sort = "'.$radio.'" LIMIT 1') or die (db_error());
         }
-        
+        <a name="diff" id="c2"><span class="HDAdded">}</span></a>
 }
 
 ##
@@ -357,13 +390,13 @@ if ($_SESSION['authright'] &lt;= -1 ) {
 } else {
       $woR = '= "1"';
 }
-$limit = 3;  // Limit 
-<a name="diff" id="c1"><span class="HDAdded">$zaehler = 0;
-</span></a>$page = ( $menu-&gt;getA(1) == 'p' ? $menu-&gt;getE(1) : 1 );
-$MPL = db_make_sites ($page , <a name="diff" id="c2"><span class="HDDeleted">'WHERE recht '.$woR</span></a><span class="HDAdded">''</span> , $limit , "?vote" , 'poll' );
+$limit = <a name="diff" id="c3"><span class="HDDeleted">3;  // Limit </span></a><span class="HDAdded">5;  // Limit</span>
+<span class="HDAdded">$zaehler = 0;
+</span>$page = ( $menu-&gt;getA(1) == 'p' ? $menu-&gt;getE(1) : 1 );
+$MPL = db_make_sites ($page , <a name="diff" id="c4"><span class="HDDeleted">'WHERE recht '.$woR</span></a><span class="HDAdded">''</span> , $limit , "?vote" , 'poll' );
 $anfang = ($page - 1) * $limit;
 $class = '';
-$erg = db_query('SELECT * FROM `prefix_poll` <a name="diff" id="c3"><span class="HDDeleted">WHERE recht '.$woR.' ORDER BY </span></a><span class="HDAdded">ORDER BY stat DESC, </span>poll_id DESC LIMIT '.$anfang.',<span class="HDDeleted">'.$limit</span><span class="HDAdded">10000000'</span>);
+$erg = db_query('SELECT * FROM `prefix_poll` <a name="diff" id="c5"><span class="HDDeleted">WHERE recht '.$woR.' ORDER BY </span></a><span class="HDAdded">ORDER BY stat DESC, </span>poll_id DESC LIMIT '.$anfang.',<span class="HDDeleted">'.$limit</span><span class="HDAdded">10000000'</span>);
 while ($<span class="HDAdded">zaehler &lt; $limit AND $</span>fraRow = db_fetch_object($erg)) {
 
     $maxRow = db_fetch_object(db_query('SELECT MAX(res) as res FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow-&gt;poll_id.'"'));
@@ -377,38 +410,42 @@ while ($<span class="HDAdded">zaehler &lt; $limit AND $</span>fraRow = db_fetch_
         } elseif ($fraRow-&gt;recht == 1) {
           $inTextAr = $_SERVER['REMOTE_ADDR'];
         }
-<a name="diff" id="c4"><span class="HDAdded">        
+<span class="HDDeleted">    echo '&lt;tr&gt;</span>&lt;td class="Cdark"&gt;<a name="diff" id="c6"><span class="HDDeleted">&lt;b&gt;'.$fraRow-&gt;frage.'&lt;/b&gt;</span></a>&lt;/td&gt;<span class="HDDeleted">&lt;/tr&gt;';
+</span><a name="diff" id="c7"><span class="HDAdded">        
 </span></a><span class="HDAdded">    
-</span><span class="HDAdded">    if ($fraRow-&gt;user_rechte == '') $fraRow-&gt;user_rechte = '0123456789';
-</span><span class="HDAdded">        if (!empty($fraRow-&gt;groups)) {
-</span><span class="HDAdded">      $votegroups = explode('#', $fraRow-&gt;groups);
-</span><span class="HDAdded">          foreach ($_SESSION['authgrp'] as $id =&gt; $authgroup) if (in_array($id, $votegroups)) $abstimmen = true;
-</span><span class="HDAdded">          if (strpos($fraRow-&gt;user_rechte,''.abs($_SESSION['authright'])) === false) $abstimmen = false;
-</span><span class="HDAdded">    }
-</span><span class="HDAdded">    elseif (strpos($fraRow-&gt;user_rechte,''.abs($_SESSION['authright'])) !== false) $abstimmen = true;
-</span><span class="HDAdded">    else $abstimmen = false;
-</span><span class="HDAdded">    
-</span><span class="HDAdded">    if (( in_array ( $inTextAr , $textAr ) OR $fraRow-&gt;stat == 0) OR (!$abstimmen)) {
-</span><span class="HDAdded">            $imPollArrayDrin = true;
-</span><span class="HDAdded">        } elseif ($abstimmen) {
-</span><span class="HDAdded">            $imPollArrayDrin = false;
-</span><span class="HDAdded">        }
-</span><span class="HDAdded">    
-</span><span class="HDAdded">    if (!$imPollArrayDrin OR $fraRow-&gt;view &gt;= $_SESSION['authright']) {
-</span><span class="HDAdded">    $zaehler++; 
-</span>    echo '&lt;tr&gt;&lt;td class="Cdark"&gt;&lt;b&gt;'.$fraRow-&gt;frage.'&lt;/b&gt;<span class="HDAdded">'.($fraRow-&gt;stat==0?' (geschlossen)':'').'</span>&lt;/td&gt;&lt;/tr&gt;';
-        if ( $class == 'Cnorm' ) { $class = 'Cmite'; } else { $class = 'Cnorm'; }
+    if ($fraRow-&gt;user_rechte == '') $fraRow-&gt;user_rechte = '0123456789';
+        if (!empty($fraRow-&gt;groups)) {
+      $votegroups = explode('#', $fraRow-&gt;groups);
+          foreach ($_SESSION['authgrp'] as $id =&gt; $authgroup) if (in_array($id, $votegroups)) $abstimmen = true;
+          if (strpos($fraRow-&gt;user_rechte,''.abs($_SESSION['authright'])) === false) $abstimmen = false;
+    }
+    elseif (strpos($fraRow-&gt;user_rechte,''.abs($_SESSION['authright'])) !== false) $abstimmen = true;
+    else $abstimmen = false;
+    
+    if (( in_array ( $inTextAr , $textAr ) OR $fraRow-&gt;stat == 0) OR (!$abstimmen)) {
+            $imPollArrayDrin = true;
+        } elseif ($abstimmen) {
+            $imPollArrayDrin = false;
+        }
+    
+    if (!$imPollArrayDrin OR $fraRow-&gt;view &gt;= $_SESSION['authright']) {
+    $zaehler++; 
+    echo '&lt;tr&gt;&lt;td class="Cdark"&gt;&lt;b&gt;'.$fraRow-&gt;frage.'&lt;/b&gt;';
+    if ($fraRow-&gt;stat == 0 ) { echo ' (geschlossen)'; }
+    elseif ($fraRow-&gt;exptime &gt; 0) { echo ' (bis '.date('H.i \U\h\r - d.m.Y',$fraRow-&gt;exptime).')'; }
+    echo '&lt;/td&gt;&lt;/tr&gt;';
+</span>        if ( $class == 'Cnorm' ) { $class = 'Cmite'; } else { $class = 'Cnorm'; }
         echo '&lt;tr&gt;&lt;td class="'.$class.'"&gt;';
-<a name="diff" id="c5"><span class="HDDeleted">        if ( in_array ( $inTextAr , $textAr ) OR $fraRow-&gt;stat == 0) {
+<a name="diff" id="c8"><span class="HDDeleted">        if ( in_array ( $inTextAr , $textAr ) OR $fraRow-&gt;stat == 0) {
 </span></a><span class="HDAdded">
 </span><span class="HDAdded">        if ($imPollArrayDrin) {
 </span>              echo '&lt;table width="100%" cellpadding="0"&gt;';
-<a name="diff" id="c6"><span class="HDDeleted">            $imPollArrayDrin = true;
+<a name="diff" id="c9"><span class="HDDeleted">            $imPollArrayDrin = true;
 </span></a>        } else {
               echo '&lt;form action="index.php?vote-W'.$fraRow-&gt;poll_id.'" method="POST"&gt;';
-<a name="diff" id="c7"><span class="HDDeleted">            $imPollArrayDrin = false;
+<a name="diff" id="c10"><span class="HDDeleted">            $imPollArrayDrin = false;
 </span></a>        }
-<a name="diff" id="c8"><span class="HDAdded">
+<a name="diff" id="c11"><span class="HDAdded">
 </span></a>    $i = 0;
         $pollErg = db_query('SELECT antw, res, sort FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow-&gt;poll_id.'" ORDER BY sort');
         while ( $pollRow = db_fetch_object($pollErg) ) {
@@ -447,7 +484,7 @@ while ($<span class="HDAdded">zaehler &lt; $limit AND $</span>fraRow = db_fetch_
         }
         
     echo '&lt;/td&gt;&lt;/tr&gt;';
-<a name="diff" id="c9"><span class="HDDeleted">        
+<a name="diff" id="c12"><span class="HDDeleted">        
 </span></a><span class="HDAdded">    }
 </span>}<span class="HDDeleted"> </span>// end while
 
@@ -459,7 +496,7 @@ $design-&gt;footer();
   <pre><span class="HDNormal">&lt;?php 
 #   Copyright by Manuel Staechele
 #   Support www.ilch.de
-<a name="diff" id="c0"><span class="HDAdded">#   Modified by Mairu -&gt; Erweiterte Umfrage 1.2
+<a name="diff" id="c0"><span class="HDAdded">#   Modified by Mairu -&gt; Erweiterte Umfrage 1.3
 #   include/boxes/vote.php
 </span></a>
 
@@ -552,7 +589,10 @@ $stunden = 24;
         }
         
         echo '&lt;b&gt;'.$fraRow-&gt;frage.'&lt;/b&gt;';
-        if ( in_array ( $inTextAr , $textAr ) OR $fraRow-&gt;stat == 0) {
+<a name="diff" id="c8"><span class="HDAdded">        if ($fraRow-&gt;exptime &gt; 0) {
+      echo '&lt;br /&gt;&lt;small&gt;(bis '.date('H.i \U\h\r - d.m.Y',$fraRow-&gt;exptime).')&lt;/small&gt;';
+    }
+</span></a>        if ( in_array ( $inTextAr , $textAr ) OR $fraRow-&gt;stat == 0) {
               echo '&lt;table width="100%" cellpadding="0"&gt;';
             $imPollArrayDrin = true;
         } else {
@@ -563,7 +603,7 @@ $stunden = 24;
     $pollErg = db_query('SELECT antw, res, sort FROM `prefix_poll_res` WHERE poll_id = "'.$fraRow-&gt;poll_id.'" ORDER BY sort');
         while ( $pollRow = db_fetch_object($pollErg) ) {
             if ( $imPollArrayDrin ) {
-                        echo '&lt;tr&gt;&lt;td&gt;'.$pollRow-&gt;antw.'&lt;/td&gt;&lt;td align="right"&gt;'.$pollRow-&gt;res.'<a name="diff" id="c8"><span class="HDAdded"> ('.round($pollRow-&gt;res/$ges*100,1).'%)</span></a>&lt;/td&gt;&lt;/tr&gt;';
+                        echo '&lt;tr&gt;&lt;td&gt;'.$pollRow-&gt;antw.'&lt;/td&gt;&lt;td align="right"&gt;'.$pollRow-&gt;res.'<a name="diff" id="c9"><span class="HDAdded"> ('.round($pollRow-&gt;res/$ges*100,1).'%)</span></a>&lt;/td&gt;&lt;/tr&gt;';
             } else {
                   $i++;
             echo '&lt;input type="radio" id="vote'.$i.'" name="radio" value="'.$pollRow-&gt;sort.'"&gt;&lt;label for="vote'.$i.'"&gt; '.$pollRow-&gt;antw.'&lt;/label&gt;&lt;br&gt;';
@@ -577,7 +617,7 @@ $stunden = 24;
         } else {
           echo $lang['nowvoteavailable'];
         }
-<a name="diff" id="c9"><span class="HDDeleted">        } else {
+<a name="diff" id="c10"><span class="HDDeleted">        } else {
           echo $lang['nowvoteavailable'];
         }
 </span></a>

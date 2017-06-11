@@ -1,7 +1,7 @@
 <?php 
 #   Copyright by: Manuel Staechele
 #   Support: www.ilch.de
-#   Modified by Mairu -> Erweiterte Umfrage 1.2
+#   Modified by Mairu -> Erweiterte Umfrage 1.3
 #   include/contents/vote.php
 
 
@@ -24,19 +24,22 @@ if ($menu->getA(1) == 'W') {
 	$radio = escape ($_POST['radio'], 'integer');
 	
 		$fraRow = db_fetch_object(db_query("SELECT * FROM prefix_poll WHERE poll_id = '".$poll_id."'"));
-	  $textAr = explode('#',$fraRow->text);
-	  if ($fraRow->recht == 2) {
-		  $inTextAr = $_SESSION['authid'];
-		} elseif ($fraRow->recht == 1) {
-		  $inTextAr = $_SERVER['REMOTE_ADDR'];
+	  if ($fraRow->exptime != 0 AND $fraRow->exptime < time()) {
+      db_query("UPDATE `prefix_poll` SET stat = 0 WHERE poll_id = $poll_id");
+    } else { 
+      $textAr = explode('#',$fraRow->text);
+  	  if ($fraRow->recht == 2) {
+  		  $inTextAr = $_SESSION['authid'];
+  		} elseif ($fraRow->recht == 1) {
+  		  $inTextAr = $_SERVER['REMOTE_ADDR'];
+  		}
+  		if ( !in_array ( $inTextAr , $textAr ) ) {
+  			$textAr[] = $inTextAr;
+  		  $textArString = implode('#',$textAr);
+        db_query('UPDATE `prefix_poll` SET text = "'.$textArString.'" WHERE poll_id = "'.$poll_id.'"');
+  		  db_query('UPDATE `prefix_poll_res` SET res = res + 1 WHERE poll_id = "'.$poll_id.'" AND sort = "'.$radio.'" LIMIT 1') or die (db_error());
+  		}
 		}
-		if ( !in_array ( $inTextAr , $textAr ) ) {
-			$textAr[] = $inTextAr;
-		  $textArString = implode('#',$textAr);
-      db_query('UPDATE `prefix_poll` SET text = "'.$textArString.'" WHERE poll_id = "'.$poll_id.'"');
-		  db_query('UPDATE `prefix_poll_res` SET res = res + 1 WHERE poll_id = "'.$poll_id.'" AND sort = "'.$radio.'" LIMIT 1') or die (db_error());
-		}
-		
 }
 
 ##
@@ -63,7 +66,7 @@ if ($_SESSION['authright'] <= -1 ) {
 } else {
 	  $woR = '= "1"';
 }
-$limit = 3;  // Limit
+$limit = 5;  // Limit
 $zaehler = 0;
 $page = ( $menu->getA(1) == 'p' ? $menu->getE(1) : 1 );
 $MPL = db_make_sites ($page , '' , $limit , "?vote" , 'poll' );
@@ -102,7 +105,10 @@ while ($zaehler < $limit AND $fraRow = db_fetch_object($erg)) {
     
     if (!$imPollArrayDrin OR $fraRow->view >= $_SESSION['authright']) {
     $zaehler++; 
-    echo '<tr><td class="Cdark"><b>'.$fraRow->frage.'</b>'.($fraRow->stat==0?' (geschlossen)':'').'</td></tr>';
+    echo '<tr><td class="Cdark"><b>'.$fraRow->frage.'</b>';
+    if ($fraRow->stat == 0 ) { echo ' (geschlossen)'; }
+    elseif ($fraRow->exptime > 0) { echo ' (bis '.date('H.i \U\h\r - d.m.Y',$fraRow->exptime).')'; }
+    echo '</td></tr>';
 		if ( $class == 'Cnorm' ) { $class = 'Cmite'; } else { $class = 'Cnorm'; }
 		echo '<tr><td class="'.$class.'">';
 

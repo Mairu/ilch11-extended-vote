@@ -1,7 +1,7 @@
 <?php 
 #   Copyright by: Manuel Staechele
 #   Support: www.ilch.de
-#   Modified by Mairu -> Erweiterte Umfrage 1.2
+#   Modified by Mairu -> Erweiterte Umfrage 1.3
 #   include/admin/vote.php
 
 
@@ -70,8 +70,27 @@ if ( $menu->get(1) == 5 ) {
       $i++;       
       }    
     
-// A L L E   V O T E S   W E R D E N   A N G E Z E I G T			
-  
+// A L L E   V O T E S   W E R D E N   A N G E Z E I G T
+
+    //Datum und Zeit auslesen
+    if ( isset($_POST['datum']) ) {
+      $d = explode('.',$_POST['datum']);
+      if (checkdate($d[1],$d[0],$d[2])) {
+        $datum = $_POST['datum'];
+        if ( isset($_POST['zeit']) ) {
+          $h = intval(substr($_POST['zeit'],0,2));
+          $m = intval(substr($_POST['zeit'],2));
+          if ( $h >= 0 AND $h < 24 AND $m >= 0 AND $m < 60) {
+            $zeit = $_POST['zeit'];
+          }
+        } else {
+          $zeit = '00:00';
+        }
+      } 
+    } else {
+      $datum = '';
+      $zeit = '';
+    }
 
     if ( isset($_POST['sub']) ) {
       
@@ -83,9 +102,13 @@ if ( $menu->get(1) == 5 ) {
       for ($i = 1; $i <= 9; $i++ ) if ($_POST['cb'.$i] == 'on') $usr .= $i;
 			$view = escape($_POST['view'],'integer');
       }
-               
+      if ($datum != '') {
+        $timestamp = mktime( substr($zeit,0,2), substr($zeit,3) , 0, substr($datum,3,2) , substr($datum,0,2) , substr($datum,6) );
+      } else {
+        $timestamp = 0;
+      }      
 	    if ( empty($_POST['vid']) ) {
-		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'", '.$view.') ');
+		    db_query('INSERT INTO `prefix_poll` VALUES ( "" , "'.$_POST['frage'].'" , "'.$_POST['poll_recht'].'" , "1" , "" , "'.$usr.'", "'.$grps.'", '.$view.', '.$timestamp.') ');
 			  $poll_id = db_last_id(); $i = 1;
 			  foreach ($_POST['antw'] as $v) {
 			    if ( ! empty ($v) ) {
@@ -94,7 +117,7 @@ if ( $menu->get(1) == 5 ) {
 				  }
 		    }
 		  } else {
-        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.' WHERE poll_id = "'.$_POST['vid'].'"');
+        db_query('UPDATE `prefix_poll` SET frage = "'.$_POST['frage'].'", recht = "'.$_POST['poll_recht'].'", user_rechte = "'.$usr.'", groups = "'.$grps.'", view = '.$view.', exptime = '.$timestamp.' WHERE poll_id = "'.$_POST['vid'].'"');
 			  $i = 1;
 				foreach ($_POST['antw'] as $k => $v) {
 				  $a = db_count_query("SELECT COUNT(*) FROM prefix_poll_res WHERE poll_id = ".$_POST['vid']." AND sort = ".$k);
@@ -109,11 +132,13 @@ if ( $menu->get(1) == 5 ) {
 					}
 				}
       }
-		} 
+		$datum = '';
+		$zeit = '';
+    } 
 		if ( empty($_POST['add']) ) {
 		
 			if ( isset($_GET['vid']) ) {
-			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups, view FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
+			  $row1 = db_fetch_object(db_query('SELECT frage, recht, user_rechte, groups, view, exptime FROM `prefix_poll` WHERE poll_id = "'.$_GET['vid'].'"'));
 				$_POST['frage'] = $row1->frage;
 				$_POST['poll_recht'] = $row1->recht;
 				for ($i = 1; $i <= 9; $i++) if (!is_bool(strrpos($row1->user_rechte,''.$i.''))) $_POST['cb'.$i] = 'on';
@@ -123,7 +148,10 @@ if ( $menu->get(1) == 5 ) {
 			  while ($row2 = db_fetch_object($erg2)) {
 					$_POST['antw'][$row2->sort] = $row2->antw;
 				}
-        				
+				if ($row1->exptime > 0) {
+        $datum = date('d.m.Y',$row1->exptime);
+        $zeit = date('H:i',$row1->exptime);
+        } 
 				$_POST['vid'] = $_GET['vid'];
 			} else {
 			  $_POST['frage'] = '';
@@ -168,9 +196,11 @@ function show_trs () {
       echo '<table cellpadding="0" cellspacing="0" border="0"><tr><td><img src="include/images/icons/admin/vote.png" /></td><td width="30"></td><td valign="bottom"><h1>Umfrage</h1></td></tr></table>';
       
 			echo '<table width="100%" cellpadding="2" cellspacing="1" border="0" class="border">';
-		  echo '<tr><td width="100" class="Cmite">Frage</td>';
-		  echo '<td width="500" class="Cnorm"><input type="text" size="40" value="'.$_POST['frage'].'" name="frage"></td></tr>';
-		  echo '<tr><td width="100" class="Cmite">F&uuml;r</td>';
+		  echo '<tr><td width="155" class="Cmite">Frage</td>';
+		  echo '<td width="500" class="Cnorm"><input type="text" size="74" value="'.$_POST['frage'].'" name="frage"></td></tr>';
+		  echo '<tr><td class="Cmite">Umfrage l&auml;uft aus am:<br /><small>Wenn nicht angegeben, l&auml;uft sie nie von alleine aus</small></td>';
+      echo '<td class="Cnorm">Datum (Format: DD.MM.YYYY) <input type="text" value="'.$datum.'" name="datum" size="10"/> &nbsp; Zeit: (Format HH:MM) <input type="text" value="'.$zeit.'" name="zeit" size="5"/></td></tr>';      
+      echo '<tr><td class="Cmite">F&uuml;r</td>';
 		  echo '<td width="500" class="Cnorm"><select name="poll_recht" onchange="show_trs();">'. getPollRecht($_POST['poll_recht']) .'</select></td></tr>';
 			
       echo '<tr id="tr1" style="display: '.$display.';"><td class="Cmite">Userklassen<font class="smalfont"><br />Wenn keiner ausgewählt ist können alle voten</font></td><td class="Cnorm">'.

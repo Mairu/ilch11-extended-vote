@@ -1,7 +1,7 @@
 <?php 
 #   Copyright by Manuel Staechele
 #   Support www.ilch.de
-#   Modified by Mairu -> Erweiterte Umfrage 1.2
+#   Modified by Mairu -> Erweiterte Umfrage 1.3
 #   include/boxes/vote.php
 
 
@@ -87,6 +87,9 @@ $stunden = 24;
 		}
 		
 		echo '<b>'.$fraRow->frage.'</b>';
+		if ($fraRow->exptime > 0) {
+      echo '<br /><small>(bis '.date('H.i \U\h\r - d.m.Y',$fraRow->exptime).')</small>';
+    }
 		if ( in_array ( $inTextAr , $textAr ) OR $fraRow->stat == 0) {
 			  echo '<table width="100%" cellpadding="0">';
 		    $imPollArrayDrin = true;
